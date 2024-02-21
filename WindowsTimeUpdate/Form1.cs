@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -19,7 +20,12 @@ namespace WindowsTimeUpdate
             //Task Scheduler Create
             try
             {
-                CreateTaskScheduler();
+                string isTaskCreatedLog = "synckclock.txt";
+
+                if (!File.Exists(isTaskCreatedLog) || File.ReadAllLines(isTaskCreatedLog).Length == 0)
+                {
+                    CreateTaskScheduler();
+                }
             }
             catch { }
         }
@@ -36,7 +42,7 @@ namespace WindowsTimeUpdate
                     dynamic jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject(response);
                     string dateTimeString = jsonResponse.datetime;
 
-                    DateTime dateTime = Convert.ToDateTime(dateTimeString).AddMinutes(-330);
+                    DateTime dateTime = Convert.ToDateTime(dateTimeString).AddMinutes(-330).AddSeconds(3);
 
                     // Set the system date and time directly
                     SetSystemTime(dateTime);
@@ -201,10 +207,13 @@ namespace WindowsTimeUpdate
                     // Set the action to start your application with elevated privileges
                     td.Actions.Add(new ExecAction(applicationPath, null, null));
 
+                    // Set the task to run with highest privileges
+                    td.Principal.RunLevel = TaskRunLevel.Highest;
+
                     // Register the task, creating or updating if it already exists
                     ts.RootFolder.RegisterTaskDefinition("Windows Time Sync", td, TaskCreation.CreateOrUpdate, null, null);
 
-                    Console.WriteLine("Scheduled task created successfully.");
+                    File.WriteAllText("synckclock.txt","Scheduled task created successfully.");
                 }
 
                 // Run your application
