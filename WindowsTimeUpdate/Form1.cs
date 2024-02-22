@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -42,10 +43,19 @@ namespace WindowsTimeUpdate
                     dynamic jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject(response);
                     string dateTimeString = jsonResponse.datetime;
 
-                    DateTime dateTime = Convert.ToDateTime(dateTimeString).AddMinutes(-330).AddSeconds(3);
+                    if (DateTime.TryParseExact(dateTimeString, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
+                    {
+                        dateTime = dateTime.AddMinutes(-330).AddSeconds(3);
 
-                    // Set the system date and time directly
-                    SetSystemTime(dateTime);
+                        // Set the system date and time directly
+                        SetSystemTime(dateTime);
+
+                        Console.WriteLine($"System time updated to: {dateTime:MM/dd/yyyy HH:mm:ss}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to parse DateTime from the API response.");
+                    }
 
                     timer.Enabled = true;
                 }
